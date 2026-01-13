@@ -1,15 +1,21 @@
 #include <assert.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 
+int ipow (int begin, int power) {
+  int result = begin; // 10
+  for (int i = 1; i < power; ++i) {
+    result *= begin;
+  }
+}
+
 int stoi(char *str) {
   int result = 0;
   int i = 0;
   while (str[i] != '\0') {
-    result += (str[i] - '0') * pow(10, i);
+    result += (str[i] - '0') * ipow(10, i);
     i++;
   }
 
