@@ -25,7 +25,7 @@ int stoi(char *str) {
 int main(int argc, char **argv) {
   int filename_index = 0;
   int size_index = 0;
-  int seek = 0;
+  system("cat src/kernel.asm src/*[^kernel].asm > kernel.asm.cat");
 
   for (int i = 1; i < argc; ++i) {
     if (strcmp(argv[i], "-o") == 0) {
@@ -51,28 +51,29 @@ int main(int argc, char **argv) {
 
       continue;
     }
-
-    assert(size_index > 0); // means the file has been made
-    char command[100];
-    sprintf(command, "nasm -f bin %s -o %s.bin", argv[i], argv[i]);
-
-    if (system(command) != 0) {
-      return EXIT_FAILURE;
-    }
-
-    struct stat st;
-    char bin_filename[strlen(argv[i]) + 4 + 1];
-    sprintf(bin_filename, "%s.bin", argv[i]);
-    stat(bin_filename, &st);
-    long long size = st.st_size;
-
-    sprintf(command, "dd if=%s.bin of=%s bs=512 seek=%d conv=notrunc", argv[i],
-            argv[filename_index], seek);
-    seek += size / 512;
-    if (size % 512 != 0) {
-      seek++;
-    }
-
-    remove(bin_filename);
   }
+
+  assert(size_index > 0);
+  
+  if (system("nasm -f bin boot.asm -o boot.bin") != 0) {
+    return EXIT_FAILURE;
+  }
+  
+  if (system("nasm -f bin kernel.asm.cat -o kernel.bin.cat") != 0) {
+    return EXIT_FAILURE;
+  }
+  char command[200];
+  sprintf(command, "dd if=boot.bin of=%s bs=512 seek=0 conv=notrunc", arg[filename_index]);
+  if (system(command) != 0) {
+    return EXIT_FAILURE;
+  }
+  
+  sprintf(command, "dd if=kernel.bin.cat of=%s bs=512 seek=1 conv=notrunc", arg[filename_index]);
+  if (system(command) != 0) {
+    return EXIT_FAILURE;
+  }
+  
+  remove("src/kernel.asm.cat");
+  remove("src/kernel.bin.cat");
+  remove("boot.bin");
 }
